@@ -1,13 +1,14 @@
 {
   "name": "dsh-court",
-  "version": "0.1.0",
-  "description": "小朝廷 · 私人智囊团 —— DeepSeek Harness 插件：官职绑定历史人物，按各自的智力与性格议政。名册零成本，点将才调模型。附带可视化面板与印章头像。",
+  "version": "0.1.1",
+  "description": "小朝廷 · 私人智囊团 —— DeepSeek Harness 插件：官职绑定历史人物，按各自的判断取径（七维 + 史证）给建议。名册零成本，点将才调模型。附带可视化面板、印章头像与 Agent Preset 注册。",
   "type": "module",
   "license": "MIT",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
+    "./presets": "./lib/presets.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -40,7 +41,8 @@
       "platform": "web",
       "inject": [
         "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-layout"
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-workspace"
       ]
     }
   },

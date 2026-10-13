@@ -7,7 +7,11 @@
 // 可视化：workflow 运行面板里是一条分阶段流水线
 // 关键  ：**执行与验收必须分离** —— 干活的部不能自己说合格
 //
-// 阶段：拟案（左丞相）→ 审议（谏议，可否决）→ 派发执行（六部并行）→ 独立验收（刑部）→ 汇总
+// 阶段：拟案（左丞相）→ 审议（谏议，可否决）→ 派发执行（六部并行）→ 独立验收 → 汇总
+//
+// 设计要点（2026-10-14 修正）：
+//   · 删掉「只做你职责范围内的事」——按七维取径切入即可，仍要给全局判断
+//   · **不必模仿古人语气**，要判断不要表演
 
 const task = args.task;
 const deliverable = args.deliverable ?? '（未指定，按任务自行判断合理产出）';
@@ -29,10 +33,10 @@ const ROSTER = 'court/roster.json';
 phase('一 · 拟案');
 
 const plan = await agent(
-  `先读 \`${OFFICIALS.zuocheng.card}\` 与 \`${ROSTER}\`，按左丞相的人格与职责拟案。\n\n` +
+  `先读 \`${OFFICIALS.zuocheng.card}\` 与 \`${ROSTER}\`，按左丞相的**七维取径**（谋略 10 / 政治 9）拟案。\n\n` +
   `【任务】${task}\n【要交付】${deliverable}\n\n` +
   `输出：① 这事能不能办、卡在哪；② 分几步、每步的产出；③ 该派给哪几个部（用 roster.json 里的官职）；④ 每步的完成判据。\n` +
-  `只拟案，**不要动手执行**。`,
+  `**不必模仿古人语气**，直接给判断。只拟案，**不要动手执行**。`,
   { provider: OFFICIALS.zuocheng.provider, model: OFFICIALS.zuocheng.model, label: OFFICIALS.zuocheng.label, phase: '拟案' },
 );
 
@@ -43,8 +47,8 @@ let reviewText = '（跳过审议）';
 if (needReview) {
   phase('二 · 审议');
   reviewText = await agent(
-    `先读 \`${OFFICIALS.jianyi.card}\`，按谏议大夫的职责挑这份方案的漏洞。\n\n【方案】\n${plan}\n\n` +
-    `第一句就给结论：\`准\` 或 \`封驳\`。若封驳，逐条说明问题、后果、以及不管会怎样。`,
+    `先读 \`${OFFICIALS.jianyi.card}\`，按谏议大夫的**七维取径**（法度 10）挑这份方案的漏洞。\n\n【方案】\n${plan}\n\n` +
+    `第一句就给结论：\`准\` 或 \`封驳\`。若封驳，逐条说明问题、后果、以及不管会怎样。**不必模仿古人语气**。`,
     { provider: OFFICIALS.jianyi.provider, model: OFFICIALS.jianyi.model, label: OFFICIALS.jianyi.label, phase: '审议' },
   );
   approved = !/^\s*封驳/.test(String(reviewText).trim());
@@ -65,11 +69,14 @@ const work = await parallel(
     const o = OFFICIALS[key];
     if (!o) throw new Error('未知官职：' + key + '（先在 roster.json 里立这个官）');
     return agent(
-      `先读 \`${o.card}\`，按你的官职职责执行分配给你的那部分。\n\n【任务】${task}\n【总体方案】\n${plan}\n【要交付】${deliverable}\n\n` +
+      `先读 \`${o.card}\`，按那张卡的**七维取径**与输出格式执行分配给你的那部分。\n\n` +
+      `【任务】${task}\n【总体方案】\n${plan}\n【要交付】${deliverable}\n\n` +
       `要求：\n` +
-      `1. **只做你职责范围内的事**，越界的部分在回报里说明"此事非本部所辖，建议移交某某"。\n` +
+      `1. 按你的**最高维**切入；其他方面也要给判断，低分维度注明把握不大。\n` +
+      `   **不要只守着自己那一摊而拒绝思考全局**。\n` +
       `2. 真的要动手：写文件、跑命令、产出实物。**不要只写计划**。\n` +
-      `3. 回报格式：做了什么 → 产出物路径 → 怎么验证 → 遗留问题。`,
+      `3. **不必模仿古人语气**。\n` +
+      `4. 回报格式：做了什么 → 产出物路径 → 怎么验证 → 遗留问题 → 把握。`,
       { provider: o.provider, model: o.model, label: o.label, phase: '执行' },
     );
   }),
@@ -79,7 +86,7 @@ const work = await parallel(
 phase('四 · 独立验收');
 
 const verification = await agent(
-  `你是**独立验收方**（刑部的角色：独立测试、缺陷复现、安全与权限审计、回归验证）。\n\n` +
+  `你是**独立验收方**（刑部角色：独立测试、缺陷复现、安全与权限审计、回归验证）。\n\n` +
   `【任务】${task}\n【方案】\n${plan}\n【各部回报】\n${work.map((w, i) => `--- ${ministries[i]} ---\n${w}`).join('\n')}\n\n` +
   `要求：**不要相信回报里的自述**，去实际检查产出物（读文件、跑命令、复现）。\n` +
   `逐项判定：声称完成项 → 实际验证结果 → 通过 / 未通过 / 无法验证（并说明为什么）。\n` +

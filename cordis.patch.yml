@@ -1,4 +1,12 @@
-# dsh-court 的 bundle patch —— 把小朝廷面板挂进 DSH 配置树
+# dsh-court 的 bundle patch —— 把小朝廷挂进 DSH 配置树
+#
+# 两行是**刻意的拆分**：
+#   · dsh-court          面板与 HTTP 路由      （inject: webServer）
+#   · dsh-court-presets  把每位官员注册成预设  （inject: agentPresets）
+# 分开之后，若某个部署没有 agentPresets 服务，只有「预设」那一行不生效，
+# 面板照常工作 —— 这是官方 README 推荐的「每个能力各占一行」。
 - insert:
     - id: dsh-court
       name: 'dsh-court'
+    - id: dsh-court-presets
+      name: 'dsh-court/presets'
