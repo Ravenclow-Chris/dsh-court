@@ -1,0 +1,54 @@
+{
+  "name": "dsh-court",
+  "version": "0.1.0",
+  "description": "小朝廷 · 私人智囊团 —— DeepSeek Harness 插件：官职绑定历史人物，按各自的智力与性格议政。名册零成本，点将才调模型。附带可视化面板与印章头像。",
+  "type": "module",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "starter",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "multi-agent",
+    "persona",
+    "council",
+    "小朝廷",
+    "智囊团"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-layout"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ravenclow-Chris/dsh-court.git"
+  },
+  "homepage": "https://github.com/Ravenclow-Chris/dsh-court#readme",
+  "bugs": {
+    "url": "https://github.com/Ravenclow-Chris/dsh-court/issues"
+  }
+}

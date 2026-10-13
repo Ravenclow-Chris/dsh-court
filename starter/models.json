@@ -1,0 +1,11 @@
+{
+  "note": "面板里下拉用的候选模型。可随意增删；面板也允许直接手填任意 provider/model。来源：model-board 2026-10-11 实测。",
+  "routes": [
+    { "provider": "deepseek-account", "model": "deepseek-v4-pro", "note": "最强推理 · 默认主力" },
+    { "provider": "deepseek-account", "model": "deepseek-flash", "note": "快而便宜 · 杂活" },
+    { "provider": "kimi", "model": "kimi-k2.7-code", "note": "262K 长上下文" },
+    { "provider": "kimi", "model": "kimi-k2.6", "note": "长上下文备选" },
+    { "provider": "glm", "model": "glm-5.3", "note": "中文 / 前端 / 写作" },
+    { "provider": "glm", "model": "glm-5.3-flash", "note": "快而便宜" }
+  ]
+}

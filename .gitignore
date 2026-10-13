@@ -1,0 +1,13 @@
+node_modules/
+*.log
+*.tmp
+*.bak
+
+# 编辑面板写回的备份
+court/*.bak
+court/**/*.bak
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
