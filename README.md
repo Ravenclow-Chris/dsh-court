@@ -147,6 +147,32 @@ $DSH_HOME/court/
 
 ---
 
+## 排障
+
+插件启动时会往 **`$DSH_HOME/dsh-court-diag.log`** 追加几行诊断。面板报「名册读不出来」时，先看这个文件：
+
+```text
+--- module loaded from <插件路径>      模块加载成功
+apply entered; keys=fiber             cordis 调用了 apply
+  config(arg)=null                    插件配置（apply 的第二个参数）
+  ctx.config=(不可读)                 正常：ctx.config 在守卫下读不了
+  courtDir=...  seeded=false          选中的朝廷目录
+  routes registered: /api/court/...   路由注册成功
+apply completed (via ctx.effect)
+```
+
+对照判断：
+
+| 日志停在哪 | 说明 |
+|---|---|
+| 连 `module loaded` 都没有 | 插件没被加载 → 查 profile 的 `dsh.profile.bundles` 是否含 `dsh-court` |
+| 有 `module loaded`、无 `apply entered` | cordis 没调用 `apply` → 激活环节问题 |
+| 有 `ERROR in apply: ...` | 直接看栈 |
+| 有 `routes registered` 但接口仍 401 | 路由被别的中间件挡住 |
+| `courtDir` 指向的目录里没有 `roster.json` | 目录选错了 → 用 `DSH_COURT_DIR` 或插件 `config.courtDir` 指定 |
+
+---
+
 ## 开发
 
 浏览器半边是**手写的纯 JS，没有构建步骤**。
@@ -193,6 +219,34 @@ ctx.layout.selectPanel('conversation')   // 回到会话
 所以 `package.json` 的 `dsh.client.inject` 必须带上 `@deepseek-ai/dsh-client-ui-layout`，模块的 `inject` 数组要有 `'layout'`。
 
 导航项的点击由本插件自己处理并 `stopPropagation()`，免得和外壳的切换逻辑互相抵消。
+
+### ⚠ cordis 的 `ctx` 是守卫 Proxy —— 最容易踩的坑
+
+本插件在这上面栽过一次，现象很迷惑：**客户端半边照常渲染，但宿主路由一条都没注册，接口全 401**。
+
+原因：**读任何没写进 `inject` 的服务都会抛异常，而异常会中断整个 `apply`**。
+
+```js
+export const inject = ['webServer']
+
+export function apply(ctx, config) {
+  ctx.webServer.register(...)   // ✅ 已 inject
+  ctx.effect(...)               // ✅ 核心方法
+
+  ctx.config                    // ❌ 抛：读不了。配置是 apply 的**第二个参数**
+  ctx.slots                     // ❌ 抛：没 inject slots
+  typeof ctx.anythingElse       // ❌ 一样抛，`typeof` 也救不了
+}
+```
+
+要读就先包起来：
+
+```js
+const safe = (fn, fb) => { try { return fn() } catch { return fb } }
+const cfg = config || safe(() => ctx.config, undefined)
+```
+
+推论：宿主半边的 `apply` **整体包一层 try/catch**，否则任何一处守卫抛错都会静默地让所有路由消失。
 
 改完 `lib/client.js` 需要**重启 app**（或另跑 `pnpm run dev:web` 让 HMR 接手）。宿主半边（`lib/index.js`）是普通 ESM。
 
